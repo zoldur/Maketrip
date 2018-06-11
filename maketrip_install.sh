@@ -3,10 +3,11 @@
 TMP_FOLDER=$(mktemp -d)
 CONFIG_FILE='maketrip.conf'
 CONFIGFOLDER='/root/.maketrip'
+UBUNTU_VERSION=$(lsb_release -r | awk '{print $NF}' | sed -e 's/\.//')
 COIN_DAEMON='maketripd'
 COIN_CLI='maketrip-cli'
 COIN_PATH='/usr/local/bin/'
-COIN_TGZ='https://github.com/zoldur/Maketrip/releases/download/v2.0.0.1/maketrip.tar.gz'
+COIN_TGZ="https://github.com/zoldur/Maketrip/releases/download/v2.0.0.1/maketrip-${UBUNTU_VERSION}.tar.gz"
 COIN_ZIP=$(echo $COIN_TGZ | awk -F'/' '{print $NF}')
 COIN_NAME='Maketrip'
 COIN_PORT=12333
@@ -133,8 +134,8 @@ EOF
 
 function enable_firewall() {
   echo -e "Installing and setting up firewall to allow ingress on port ${GREEN}$COIN_PORT${NC}"
-  ufw allow $COIN_PORT/tcp comment "$COIN_NAME MN port" >/dev/null
-  ufw allow ssh comment "SSH" >/dev/null 2>&1
+  ufw allow $COIN_PORT/tcp >/dev/null 2>&1
+  ufw allow ssh >/dev/null 2>&1
   ufw limit ssh/tcp >/dev/null 2>&1
   ufw default allow outgoing >/dev/null 2>&1
   echo "y" | ufw enable >/dev/null 2>&1
@@ -175,8 +176,8 @@ fi
 
 
 function checks() {
-if [[ $(lsb_release -d) != *16.04* ]]; then
-  echo -e "${RED}You are not running Ubuntu 16.04. Installation is cancelled.${NC}"
+if [[ $(lsb_release -d) != *1[46].04* ]]; then
+  echo -e "${RED}You are not running Ubuntu 14.04 or 16.04. Installation is cancelled.${NC}"
   exit 1
 fi
 
@@ -204,7 +205,7 @@ apt-get update >/dev/null 2>&1
 apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" make software-properties-common \
 build-essential libtool autoconf libssl-dev libboost-dev libboost-chrono-dev libboost-filesystem-dev libboost-program-options-dev \
 libboost-system-dev libboost-test-dev libboost-thread-dev sudo automake git wget curl libdb4.8-dev bsdmainutils libdb4.8++-dev \
-libminiupnpc-dev libgmp3-dev ufw pkg-config libevent-dev  libdb5.3++ unzip libzmq5 >/dev/null 2>&1
+libminiupnpc-dev libgmp3-dev ufw pkg-config libevent-dev systemd >/dev/null 2>&1
 if [ "$?" -gt "0" ];
   then
     echo -e "${RED}Not all required packages were installed properly. Try to install them manually by running the following commands:${NC}\n"
@@ -214,9 +215,10 @@ if [ "$?" -gt "0" ];
     echo "apt-get update"
     echo "apt install -y make build-essential libtool software-properties-common autoconf libssl-dev libboost-dev libboost-chrono-dev libboost-filesystem-dev \
 libboost-program-options-dev libboost-system-dev libboost-test-dev libboost-thread-dev sudo automake git curl libdb4.8-dev \
-bsdmainutils libdb4.8++-dev libminiupnpc-dev libgmp3-dev ufw pkg-config libevent-dev libdb5.3++ unzip libzmq5"
+bsdmainutils libdb4.8++-dev libminiupnpc-dev libgmp3-dev ufw pkg-config libevent-dev sytemd"
  exit 1
 fi
+
 clear
 }
 
